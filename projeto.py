@@ -4,10 +4,12 @@ import streamlit as st
 import folium
 import geopandas
 import plotly.express as px
+import datetime
+from datetime import datetime as datetime1
 
 from folium.plugins import MarkerCluster
 from streamlit_folium import folium_static
-from datetime import datetime
+
 
 desired_width=150
 pd.set_option('display.width', desired_width)
@@ -62,8 +64,11 @@ avg_price = int(data['price'].mean())
 min_year_built = int(data['yr_built'].min()+1)
 max_year_built = int(data['yr_built'].max()+1)
 
-min_date = datetime.strptime(data['date'].min(), '%Y-%m-%d')
-max_date = datetime.strptime(data['date'].max(), '%Y-%m-%d')
+min_date1 = datetime1.strptime(data['date'].min(), '%Y-%m-%d')
+max_date1 = datetime1.strptime(data['date'].max(), '%Y-%m-%d')
+
+min_date = min_date1 + datetime.timedelta(days=1)
+max_date = max_date1 + datetime.timedelta(days=1)
 
 
 st.sidebar.title('Commercial Options')
@@ -209,34 +214,41 @@ else:
 st.dataframe(data)
 st.subheader('Results: {}'.format(data['id'].count()))
 
-st.title('Region Overview')
+st.title('Region Overview (Map)')
 
 c1, c2 = st.columns((1, 1))
 
+print(df_map)
+print(data)
 
-# Base Map - Folium
-density_map = folium.Map(location=[df_map['lat'].mean(),
-                                   df_map['long'].mean()],
-                         default_zoom_start=15)
+# check_id = df_map.loc[df_map['id']]
+check = df_map.empty
+if check == False:
+    # Base Map - Folium
+    density_map = folium.Map(location=[df_map['lat'].mean(),
+                                       df_map['long'].mean()],
+                             default_zoom_start=15)
 
-marker_cluster = MarkerCluster().add_to(density_map)
-for name, row in df_map.iterrows():
-    folium.Marker([row['lat'], row['long']],
-                  popup='Sold R${0} on: {1}.  ID: {2} Zipcode: {3} Features:'
-                        ' {4} sqft, {5} bedrooms, {6} bathrooms,'
-                        ' year built: {7}'.format(row['price'],
-                                                  row['date'],
-                                                  row['id'],
-                                                  row['zipcode'],
-                                                  row['sqft_living'],
-                                                  row['bedrooms'],
-                                                  row['bathrooms'],
-                                                  row['yr_built'])).add_to(marker_cluster)
-
-with c1:
-    folium_static(density_map)
+    marker_cluster = MarkerCluster().add_to(density_map)
+    for name, row in df_map.iterrows():
+        folium.Marker([row['lat'], row['long']],
+                      popup='Sold R${0} on: {1}.  ID: {2} Zipcode: {3} Features:'
+                            ' {4} sqft, {5} bedrooms, {6} bathrooms,'
+                            ' year built: {7}'.format(row['price'],
+                                                      row['date'],
+                                                      row['id'],
+                                                      row['zipcode'],
+                                                      row['sqft_living'],
+                                                      row['bedrooms'],
+                                                      row['bathrooms'],
+                                                      row['yr_built'])).add_to(marker_cluster)
 
 
+    with c1:
+        folium_static(density_map)
+
+else:
+    st.subheader('Data not found, change filters to see the map!')
 
 
 
