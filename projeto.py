@@ -50,40 +50,42 @@ data = pd.read_csv('kc_house_data.csv')
 # def data_overview(data, geofile):
 # ----- Average Price per Year
 data['date'] = pd.to_datetime(data['date']).dt.strftime('%Y-%m-%d')
-
+print(data.loc[data['bathrooms'] == 0])
 st.sidebar.title('Filters')
 
 # filters and selections
 f_attributes = st.sidebar.multiselect('Enter columns', data.columns)
 f_zipcode = st.sidebar.multiselect('Enter zipcode', data['zipcode'].unique())
 
-min_price = int(data['price'].min()+1)
-max_price = int(data['price'].max()+1)
+min_price = int(data['price'].min())
+max_price = int(data['price'].max())
 avg_price = int(data['price'].mean())
 
-min_year_built = int(data['yr_built'].min()+1)
-max_year_built = int(data['yr_built'].max()+1)
+min_year_built = int(data['yr_built'].min())
+max_year_built = int(data['yr_built'].max())
 
-min_date1 = datetime1.strptime(data['date'].min(), '%Y-%m-%d')
-max_date1 = datetime1.strptime(data['date'].max(), '%Y-%m-%d')
+min_date = datetime1.strptime(data['date'].min(), '%Y-%m-%d')
+max_date = datetime1.strptime(data['date'].max(), '%Y-%m-%d')
 
-min_date = min_date1 + datetime.timedelta(days=1)
-max_date = max_date1 + datetime.timedelta(days=1)
+# min_date = min_date1 + datetime.timedelta(days=1)
+# max_date = max_date1 + datetime.timedelta(days=1)
 
 
 st.sidebar.title('Commercial Options')
 
 st.sidebar.subheader('Select Max Price')
-f_price = st.sidebar.slider('Price', min_price, max_price, avg_price)
+f_price = st.sidebar.slider('Price', min_price, max_price, max_price)
 
 st.sidebar.subheader('Select Max Year Built')
-f_year_built = st.sidebar.slider('Year Built', min_year_built, max_year_built, min_year_built)
+f_year_built = st.sidebar.slider('Year Built', min_year_built, max_year_built, max_year_built)
 
 st.sidebar.subheader('Select Max Date')
-f_date = st.sidebar.slider('Date', min_date, max_date, min_date)
+f_date = st.sidebar.slider('Date', min_date, max_date, max_date)
 f_date = pd.to_datetime(f_date).strftime('%Y-%m-%d')
 
-st.sidebar.title('Attributes Options')
+st.sidebar.title('Attribute Options')
+
+on_off_attributes = st.sidebar.checkbox('Check to use the filters below')
 
 f_bedrooms = st.sidebar.selectbox('Max number of bedrooms',
                                   sorted(set(data['bedrooms'].unique())))
@@ -104,108 +106,115 @@ df = data
 if (f_zipcode != []) & (f_attributes != []):
     df_map = data.loc[data['zipcode'].isin(f_zipcode), :]
     #Commercial Options
-    df_map = df_map.loc[df_map['yr_built'] < f_year_built]
-    df_map = df_map.loc[df_map['date'] < f_date]
-    df_map = df_map.loc[df_map['price'] < f_price]
+    df_map = df_map.loc[df_map['yr_built'] <= f_year_built]
+    df_map = df_map.loc[df_map['date'] <= f_date]
+    df_map = df_map.loc[df_map['price'] <= f_price]
     #Attributes Options
-    df_map = df_map.loc[df_map['bedrooms'] < f_bedrooms]
-    df_map = df_map.loc[df_map['bathrooms'] < f_bathrooms]
-    df_map = df_map.loc[df_map['floors'] < f_floors]
-    if f_waterview:
-        df_map = df_map.loc[df_map['waterfront'] == 1]
+    if on_off_attributes:
+        df_map = df_map.loc[df_map['bedrooms'] <= f_bedrooms]
+        df_map = df_map.loc[df_map['bathrooms'] <= f_bathrooms]
+        df_map = df_map.loc[df_map['floors'] <= f_floors]
+        if f_waterview:
+            df_map = df_map.loc[df_map['waterfront'] == 1]
 
     data = data.loc[data['zipcode'].isin(f_zipcode), f_attributes]
     # Commercial Options
     if 'yr_built' in data:
-        data = data.loc[data['yr_built'] < f_year_built]
+        data = data.loc[data['yr_built'] <= f_year_built]
     if 'date' in data:
-        data = data.loc[data['date'] < f_date]
+        data = data.loc[data['date'] <= f_date]
     if 'price' in data:
-        data = data.loc[data['price'] < f_price]
+        data = data.loc[data['price'] <= f_price]
     # Attributes Options
-    if 'bedrooms' in data:
-        data = data.loc[data['bedrooms'] < f_bedrooms]
-    if 'bathrooms' in data:
-        data = data.loc[data['bathrooms'] < f_bathrooms]
-    if 'floors' in data:
-        data = data.loc[data['floors'] < f_floors]
-    if 'waterfront' in data:
-        if f_waterview:
-            data = data.loc[data['waterfront'] == 1]
+    if on_off_attributes:
+        if 'bedrooms' in data:
+            data = data.loc[data['bedrooms'] <= f_bedrooms]
+        if 'bathrooms' in data:
+            data = data.loc[data['bathrooms'] <= f_bathrooms]
+        if 'floors' in data:
+            data = data.loc[data['floors'] <= f_floors]
+        if 'waterfront' in data:
+            if f_waterview:
+                data = data.loc[data['waterfront'] == 1]
 
 elif (f_zipcode != []) & (f_attributes == []):
     df_map = data.loc[data['zipcode'].isin(f_zipcode), :]
     # Commercial Options
-    df_map = df_map.loc[df_map['yr_built'] < f_year_built]
-    df_map = df_map.loc[df_map['date'] < f_date]
-    df_map = df_map.loc[df_map['price'] < f_price]
+    df_map = df_map.loc[df_map['yr_built'] <= f_year_built]
+    df_map = df_map.loc[df_map['date'] <= f_date]
+    df_map = df_map.loc[df_map['price'] <= f_price]
     # Attributes Options
-    df_map = df_map.loc[df_map['bedrooms'] < f_bedrooms]
-    df_map = df_map.loc[df_map['bathrooms'] < f_bathrooms]
-    df_map = df_map.loc[df_map['floors'] < f_floors]
-    if f_waterview:
-        df_map = df_map.loc[df_map['waterfront'] == 1]
+    if on_off_attributes:
+        df_map = df_map.loc[df_map['bedrooms'] <= f_bedrooms]
+        df_map = df_map.loc[df_map['bathrooms'] <= f_bathrooms]
+        df_map = df_map.loc[df_map['floors'] <= f_floors]
+        if f_waterview:
+            df_map = df_map.loc[df_map['waterfront'] == 1]
 
     data = data.loc[data['zipcode'].isin(f_zipcode), :]
     # Commercial Options
     if 'yr_built' in data:
-        data = data.loc[data['yr_built'] < f_year_built]
+        data = data.loc[data['yr_built'] <= f_year_built]
     if 'date' in data:
-        data = data.loc[data['date'] < f_date]
+        data = data.loc[data['date'] <= f_date]
     if 'price' in data:
-        data = data.loc[data['price'] < f_price]
+        data = data.loc[data['price'] <= f_price]
     # Attributes Options
-    if 'bedrooms' in data:
-        data = data.loc[data['bedrooms'] < f_bedrooms]
-    if 'bathrooms' in data:
-        data = data.loc[data['bathrooms'] < f_bathrooms]
-    if 'floors' in data:
-        data = data.loc[data['floors'] < f_floors]
-    if 'waterfront' in data:
-        if f_waterview:
-            data = data.loc[data['waterfront'] == 1]
+    if on_off_attributes:
+        if 'bedrooms' in data:
+            data = data.loc[data['bedrooms'] <= f_bedrooms]
+        if 'bathrooms' in data:
+            data = data.loc[data['bathrooms'] <= f_bathrooms]
+        if 'floors' in data:
+            data = data.loc[data['floors'] <= f_floors]
+        if 'waterfront' in data:
+            if f_waterview:
+                data = data.loc[data['waterfront'] == 1]
 
 elif (f_zipcode == []) & (f_attributes != []):
     df_map = data.loc[:, :]
     # Commercial Options
-    df_map = df_map.loc[df_map['yr_built'] < f_year_built]
-    df_map = df_map.loc[df_map['date'] < f_date]
-    df_map = df_map.loc[df_map['price'] < f_price]
+    df_map = df_map.loc[df_map['yr_built'] <= f_year_built]
+    df_map = df_map.loc[df_map['date'] <= f_date]
+    df_map = df_map.loc[df_map['price'] <= f_price]
     # Attributes Options
-    df_map = df_map.loc[df_map['bedrooms'] < f_bedrooms]
-    df_map = df_map.loc[df_map['bathrooms'] < f_bathrooms]
-    df_map = df_map.loc[df_map['floors'] < f_floors]
-    if f_waterview:
-        df_map = df_map.loc[df_map['waterfront'] == 1]
+    if on_off_attributes:
+        df_map = df_map.loc[df_map['bedrooms'] <= f_bedrooms]
+        df_map = df_map.loc[df_map['bathrooms'] <= f_bathrooms]
+        df_map = df_map.loc[df_map['floors'] <= f_floors]
+        if f_waterview:
+            df_map = df_map.loc[df_map['waterfront'] == 1]
 
     data = data.loc[:, f_attributes]
     # Commercial Options
     if 'yr_built' in data:
-        data = data.loc[data['yr_built'] < f_year_built]
+        data = data.loc[data['yr_built'] <= f_year_built]
     if 'date' in data:
-        data = data.loc[data['date'] < f_date]
+        data = data.loc[data['date'] <= f_date]
     if 'price' in data:
-        data = data.loc[data['price'] < f_price]
+        data = data.loc[data['price'] <= f_price]
     # Attributes Options
-    if 'bedrooms' in data:
-        data = data.loc[data['bedrooms'] < f_bedrooms]
-    if 'bathrooms' in data:
-        data = data.loc[data['bathrooms'] < f_bathrooms]
-    if 'floors' in data:
-        data = data.loc[data['floors'] < f_floors]
-    if 'waterfront' in data:
-        if f_waterview:
-            data = data.loc[data['waterfront'] == 1]
+    if on_off_attributes:
+        if 'bedrooms' in data:
+            data = data.loc[data['bedrooms'] <= f_bedrooms]
+        if 'bathrooms' in data:
+            data = data.loc[data['bathrooms'] <= f_bathrooms]
+        if 'floors' in data:
+            data = data.loc[data['floors'] <= f_floors]
+        if 'waterfront' in data:
+            if f_waterview:
+                data = data.loc[data['waterfront'] == 1]
 
 else:
-    data = data.loc[data['yr_built'] < f_year_built]
-    data = data.loc[data['date'] < f_date]
-    data = data.loc[data['price'] < f_price]
-    data = data.loc[data['bedrooms'] < f_bedrooms]
-    data = data.loc[data['bathrooms'] < f_bathrooms]
-    data = data.loc[data['floors'] < f_floors]
-    if f_waterview:
-        data = data.loc[data['waterfront'] == 1]
+    data = data.loc[data['yr_built'] <= f_year_built]
+    data = data.loc[data['date'] <= f_date]
+    data = data.loc[data['price'] <= f_price]
+    if on_off_attributes:
+        data = data.loc[data['bedrooms'] <= f_bedrooms]
+        data = data.loc[data['bathrooms'] <= f_bathrooms]
+        data = data.loc[data['floors'] <= f_floors]
+        if f_waterview:
+            data = data.loc[data['waterfront'] == 1]
 
     df_map = data
 
